@@ -1,0 +1,40 @@
+plugins {
+    id 'com.diffplug.spotless' version '6.25.0' apply false
+}
+
+subprojects {
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
+        java {
+            importOrder()
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            indentWithSpaces(4)
+            endWithNewline()
+
+
+            googleJavaFormat()
+
+
+            custom 'no-wildcard-imports', {
+                if (it.contains('import *;')) {
+                    throw new Error('No wildcard imports allowed')
+                }
+                return it
+            }
+        }
+
+        format 'misc', {
+            target '**/*.gradle', '**/*.md', '**/*.properties'
+            trimTrailingWhitespace()
+            indentWithSpaces(4)
+            endWithNewline()
+        }
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+    }
+}

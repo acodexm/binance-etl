@@ -1,6 +1,5 @@
 package com.acodexm.dataloader.model;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserBalanceData {
+public class UserData {
   private String userId;
-  private String asset;
-  private BigDecimal free;
-  private BigDecimal locked;
-  private Instant timestamp;
+  private boolean active;
+  private Instant createdAt;
+  private Instant lastUpdated;
 }

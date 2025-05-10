@@ -1,18 +1,18 @@
-FROM eclipse-temurin:21-jdk-alpine as build
-WORKDIR /workspace/app
+FROM gradle:8.13-jdk21-alpine as builder
 
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY src src
+COPY src /usr/app/src
+COPY build.gradle /usr/app/
+COPY settings.gradle /usr/app/
+COPY gradle /usr/app/gradle
+COPY gradlew /usr/app/
 
-RUN ./gradlew build -x test
-RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+WORKDIR /usr/app
+RUN gradle build -x test
 
 FROM eclipse-temurin:21-jre-alpine
-VOLUME /tmp
-ARG DEPENDENCY=/workspace/app/build/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-ENTRYPOINT ["java","-cp","app:app/lib/*","com.acodexm.datatransformer.DataTransformerApplication"]
+
+COPY --from=builder /usr/app/build/libs/*.jar /usr/app/app.jar
+
+EXPOSE 8082
+
+ENTRYPOINT ["java", "-jar", "/usr/app/app.jar"]

@@ -29,6 +29,7 @@ spring:
 kafka:
   topics:
     user-balances: user_balance_data
+    user-data: user_data
     time-market-data: time_market_data
 
 timescale:

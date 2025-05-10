@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
   # Infrastructure services
   zookeeper:
@@ -83,13 +82,13 @@ services:
     container_name: binance-connector
     depends_on:
       - broker
-      - binance-db
+      - binance_connector_db
     ports:
       - "8081:8081"
     environment:
       SERVER_PORT: 8081
       SPRING_PROFILES_ACTIVE: 'docker'
-      SPRING_DATASOURCE_URL: 'jdbc:postgresql://binance-db:5432/binance_db'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://binance_connector_db:5432/binance_connector'
       SPRING_DATASOURCE_USERNAME: 'postgres'
       SPRING_DATASOURCE_PASSWORD: 'postgres'
       SPRING_KAFKA_BOOTSTRAP_SERVERS: 'broker:29092'
@@ -109,7 +108,7 @@ services:
     environment:
       SERVER_PORT: 8082
       SPRING_PROFILES_ACTIVE: 'docker'
-      SPRING_DATASOURCE_URL: 'jdbc:postgresql://transformer-db:5432/transformer_db'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://data_transformer_db:5432/data_transformer'
       SPRING_DATASOURCE_USERNAME: 'postgres'
       SPRING_DATASOURCE_PASSWORD: 'postgres'
       SPRING_KAFKA_BOOTSTRAP_SERVERS: 'broker:29092'
@@ -132,7 +131,7 @@ services:
     environment:
       SERVER_PORT: 8083
       SPRING_PROFILES_ACTIVE: 'docker'
-      SPRING_DATASOURCE_URL: 'jdbc:postgresql://timescaledb:5432/market_data'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://data_loader_db:5432/data_loader'
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: 'org.postgresql.Driver'
       SPRING_DATASOURCE_USERNAME: 'postgres'
       SPRING_DATASOURCE_PASSWORD: 'postgres'

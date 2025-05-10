@@ -1,9 +1,18 @@
-FROM openjdk:17-jdk-slim
+FROM gradle:8.13-jdk21-alpine as builder
 
-WORKDIR /app
+COPY src /usr/app/src
+COPY build.gradle /usr/app/
+COPY settings.gradle /usr/app/
+COPY gradle /usr/app/gradle
+COPY gradlew /usr/app/
 
-COPY build/libs/data-loader-*.jar app.jar
+WORKDIR /usr/app
+RUN gradle build -x test
 
-EXPOSE 8082
+FROM eclipse-temurin:21-jre-alpine
 
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=docker", "app.jar"]
+COPY --from=builder /usr/app/build/libs/*.jar /usr/app/app.jar
+
+EXPOSE 8083
+
+ENTRYPOINT ["java", "-jar", "/usr/app/app.jar"]

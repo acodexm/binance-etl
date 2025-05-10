@@ -2,34 +2,25 @@ package com.acodexm.binanceconnector.mappers;
 
 import com.acodexm.binanceconnector.domain.User;
 import com.acodexm.binanceconnector.entities.UserEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-@Component
-public class UserMapper {
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UserMapper {
 
-  public User toDomain(UserEntity entity) {
-    if (entity == null) {
-      return null;
-    }
+  /**
+   * Maps a UserEntity to a User domain object
+   *
+   * @param entity the user entity to map
+   * @return the mapped User domain object
+   */
+  User toDomain(UserEntity entity);
 
-    return User.builder()
-        .userId(entity.getUserId())
-        .active(entity.isActive())
-        .createdAt(entity.getCreatedAt())
-        .lastUpdated(entity.getLastUpdated())
-        .build();
-  }
-
-  public UserEntity toEntity(User domain) {
-    if (domain == null) {
-      return null;
-    }
-
-    return UserEntity.builder()
-        .userId(domain.getUserId())
-        .active(domain.isActive())
-        .createdAt(domain.getCreatedAt())
-        .lastUpdated(domain.getLastUpdated())
-        .build();
-  }
+  /**
+   * Maps a User domain object to a UserEntity
+   *
+   * @param domain the User domain object to map
+   * @return the mapped UserEntity
+   */
+  UserEntity toEntity(User domain);
 }

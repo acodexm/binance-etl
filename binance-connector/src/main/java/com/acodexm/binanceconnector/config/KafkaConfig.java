@@ -1,19 +1,16 @@
 package com.acodexm.binanceconnector.config;
 
-import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.context.annotation.Bean;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.annotation.EnableKafka;
 
+@Data
+@EnableKafka
 @Configuration
-@Profile("production")
+@ConfigurationProperties(prefix = "kafka.topics")
 public class KafkaConfig {
 
-    @Bean
-    public NewTopic booksPublishedTopic(final KafkaConfigProps kafkaConfigProps) {
-        return TopicBuilder.name(kafkaConfigProps.getTopic())
-        .partitions(10)
-        .replicas(1)
-        .build();    }
+  private String klineData = "raw_kline_data";
+  private String userBalance = "user_balance_data";
 }

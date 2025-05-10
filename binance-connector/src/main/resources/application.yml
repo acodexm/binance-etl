@@ -1,0 +1,118 @@
+# Default configuration
+spring:
+  application:
+    name: binance-connector
+
+  # Database configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5440/binance_connector
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  # JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: none # Use validate since we're using Flyway for migrations
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  # Flyway configuration for automatic migrations
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    table: flyway_schema_history
+
+  # Kafka configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      batch-size: 16384
+      properties:
+        delivery.timeout.ms: 120000
+        linger.ms: 10
+    consumer:
+      group-id: binance-connector-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+# Server configuration
+server:
+  port: 8081
+  servlet:
+    context-path: /api
+
+# Binance API configuration
+binance:
+  api:
+    key: ${BINANCE_API_KEY:}
+    secret: ${BINANCE_API_SECRET:}
+    symbols: BTCUSDT,ETHUSDT,BNBUSDT
+    interval: 1m
+    fetch-interval-seconds: 60
+    fetch-user-data: true
+
+# Kafka topics configuration
+kafka:
+  topics:
+    kline-data: raw_kline_data
+    user-balance: user_balance_data
+
+# Logging configuration
+logging:
+  level:
+    com.acodexm.binanceconnector: INFO
+    org.springframework: WARN
+    org.hibernate: INFO
+    org.flywaydb: INFO
+
+# Docker profile specific overrides
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+
+server:
+  port: ${SERVER_PORT:8081}
+
+binance:
+  api:
+    key: ${BINANCE_API_KEY:}
+    secret: ${BINANCE_API_SECRET:}
+    symbols: ${BINANCE_API_SYMBOLS:BTCUSDT,ETHUSDT,BNBUSDT}
+    interval: ${BINANCE_API_INTERVAL:1m}
+    fetch-interval-seconds: ${BINANCE_API_FETCH_INTERVAL:60}
+    fetch-user-data: ${BINANCE_API_FETCH_USER_DATA:true}
+
+kafka:
+  topics:
+    kline-data: ${KAFKA_KLINE_DATA_TOPIC:raw_kline_data}
+    user-balance: ${KAFKA_USER_BALANCE_TOPIC:user_balance_data}
+
+logging:
+  level:
+    com.acodexm.binanceconnector: ${LOGGING_LEVEL:INFO}

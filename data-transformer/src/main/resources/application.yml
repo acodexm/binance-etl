@@ -1,0 +1,40 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: data-transformer-service
+  datasource:
+    url: jdbc:postgresql://localhost:5441/data_transformer
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  # Dev JPA configuration
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: data-transformer-group
+
+  # Dev Flyway configuration
+  flyway:
+    clean-disabled: false # Be careful! This allows flyway:clean which drops all objects
+    url: jdbc:postgresql://localhost:5441/data_transformer
+    user: postgres
+    password: postgres
+
+kafka:
+  topics:
+    raw-kline-data: raw_kline_data
+    time-market-data: time_market_data
+
+aggregation:
+  windows:
+    - 1h
+    - 1d
+    - 1w
+  schedule: "0 */5 * * * *" # Run every 5 minutes

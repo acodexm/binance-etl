@@ -1,0 +1,36 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: data-loader-service
+  datasource:
+    url: jdbc:postgresql://localhost:5442/data_loader
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: data-loader-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.acodexm.binanceconnector.domain,com.acodexm.datatransformer.model,com.acodexm.dataloader.model
+
+kafka:
+  topics:
+    user-balances: user_balance_data
+    time-market-data: time_market_data
+
+timescale:
+  enabled: true
+  schema-init-timeout: 30s

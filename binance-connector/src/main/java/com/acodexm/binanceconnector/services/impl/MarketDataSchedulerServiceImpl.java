@@ -1,5 +1,6 @@
 package com.acodexm.binanceconnector.services.impl;
 
+import com.acodexm.binanceconnector.services.MarketDataSchedulerService;
 import com.acodexm.binanceconnector.usecases.MarketDataFetchUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +12,14 @@ import org.springframework.stereotype.Service;
 @Service
 @EnableScheduling
 @RequiredArgsConstructor
-public class MarketDataSchedulerService {
+public class MarketDataSchedulerServiceImpl implements MarketDataSchedulerService {
 
   private final MarketDataFetchUseCase marketDataFetchUseCase;
 
   /**
    * Scheduled task to fetch kline data at regular intervals Uses the fixed rate from configuration
    */
+  @Override
   @Scheduled(fixedRateString = "${binance.api.fetchIntervalSeconds:60}000")
   public void scheduledFetchKlineData() {
     log.info("Running scheduled market data fetch");

@@ -2,6 +2,7 @@ package com.acodexm.binanceconnector.services.impl;
 
 import com.acodexm.binanceconnector.config.KafkaConfig;
 import com.acodexm.binanceconnector.domain.KlineData;
+import com.acodexm.binanceconnector.domain.User;
 import com.acodexm.binanceconnector.domain.UserBalance;
 import com.acodexm.binanceconnector.services.MarketDataPublisherService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,6 +40,17 @@ public class MarketDataPublisherServiceImpl implements MarketDataPublisherServic
       log.debug("Published user balance for asset: {}", userBalance.getAsset());
     } catch (JsonProcessingException e) {
       log.error("Failed to publish user balance: {}", e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public void publishUserData(User user) {
+    try {
+      String message = objectMapper.writeValueAsString(user);
+      kafkaTemplate.send(kafkaConfig.getUserData(), user.getUserId(), message);
+      log.debug("Published user: {}", user);
+    } catch (JsonProcessingException e) {
+      log.error("Failed to publish user: {}", e.getMessage(), e);
     }
   }
 }

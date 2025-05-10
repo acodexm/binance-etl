@@ -13,4 +13,5 @@ public class KafkaConfig {
 
   private String klineData = "raw_kline_data";
   private String userBalance = "user_balance_data";
+  private String userData = "user_data";
 }

@@ -2,6 +2,7 @@ package com.acodexm.binanceconnector.services.impl;
 
 import com.acodexm.binanceconnector.config.BinanceApiConfigProps;
 import com.acodexm.binanceconnector.domain.KlineData;
+import com.acodexm.binanceconnector.domain.User;
 import com.acodexm.binanceconnector.domain.UserBalance;
 import com.acodexm.binanceconnector.services.BinanceApiService;
 import com.binance.connector.client.common.ApiResponse;
@@ -73,7 +74,30 @@ public class BinanceApiServiceImpl implements BinanceApiService {
   }
 
   @Override
-  public List<UserBalance> fetchUserBalances() {
+  public User fetchUser() {
+    try {
+      Boolean omitZeroBalances = true;
+      Long recvWindow = 5000L;
+      ApiResponse<GetAccountResponse> response =
+          spotRestApi.getAccount(omitZeroBalances, recvWindow);
+      log.debug("Fetched user details: {}", response.getData());
+      JsonNode root = objectMapper.readTree(response.getData().toJson());
+      String userId = root.get("uid").asText();
+
+      return User.builder()
+          .userId(userId)
+          .lastUpdated(Instant.now())
+          .createdAt(Instant.now())
+          .active(true)
+          .build();
+    } catch (Exception e) {
+      log.error("Error fetching user ID from Binance API: {}", e.getMessage());
+      throw new RuntimeException("Failed to fetch user ID from Binance API", e);
+    }
+  }
+
+  @Override
+  public List<UserBalance> fetchUserBalances(User user) {
     if (!configProps.isFetchUserData()) {
       log.warn("User data fetching is disabled in configuration");
       return Collections.emptyList();
@@ -87,8 +111,12 @@ public class BinanceApiServiceImpl implements BinanceApiService {
       log.debug("Fetched user balances: {}", response.getData());
       JsonNode root = objectMapper.readTree(response.getData().toJson());
       JsonNode balancesNode = root.get("balances");
-
+      String userId = root.get("uid").asText();
+      if (!user.getUserId().equals(userId)) {
+        throw new RuntimeException("User ID mismatch: " + user.getUserId() + " != " + userId);
+      }
       List<UserBalance> balances = new ArrayList<>();
+      Instant now = Instant.now();
 
       if (balancesNode != null && balancesNode.isArray()) {
         for (JsonNode balanceNode : balancesNode) {
@@ -99,7 +127,13 @@ public class BinanceApiServiceImpl implements BinanceApiService {
           // Skip assets with zero balance
           if (free.compareTo(BigDecimal.ZERO) > 0 || locked.compareTo(BigDecimal.ZERO) > 0) {
             UserBalance balance =
-                UserBalance.builder().asset(asset).free(free).locked(locked).build();
+                UserBalance.builder()
+                    .userId(userId)
+                    .asset(asset)
+                    .free(free)
+                    .locked(locked)
+                    .timestamp(now)
+                    .build();
             balances.add(balance);
           }
         }

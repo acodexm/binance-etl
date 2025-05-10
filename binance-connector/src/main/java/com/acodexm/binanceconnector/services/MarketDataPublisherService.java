@@ -1,6 +1,7 @@
 package com.acodexm.binanceconnector.services;
 
 import com.acodexm.binanceconnector.domain.KlineData;
+import com.acodexm.binanceconnector.domain.User;
 import com.acodexm.binanceconnector.domain.UserBalance;
 
 /** Service for publishing market data to Kafka topics */
@@ -19,4 +20,11 @@ public interface MarketDataPublisherService {
    * @param userBalance The user balance to publish
    */
   void publishUserBalance(UserBalance userBalance);
+
+  /**
+   * Publishes user data to Kafka
+   *
+   * @param user The user data to publish
+   */
+  void publishUserData(User user);
 }

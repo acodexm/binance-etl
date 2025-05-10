@@ -72,6 +72,7 @@ kafka:
   topics:
     kline-data: raw_kline_data
     user-balance: user_balance_data
+    user-data: user_data
 
 # Logging configuration
 logging:
@@ -112,6 +113,7 @@ kafka:
   topics:
     kline-data: ${KAFKA_KLINE_DATA_TOPIC:raw_kline_data}
     user-balance: ${KAFKA_USER_BALANCE_TOPIC:user_balance_data}
+    user-data: ${KAFKA_USER_DATA_TOPIC:user_data}
 
 logging:
   level:

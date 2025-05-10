@@ -21,11 +21,14 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "user_balance",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"asset", "timestamp"})})
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "asset", "timestamp"})})
 public class UserBalanceEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(name = "user_id", nullable = false)
+  private String userId;
 
   @Column(nullable = false)
   private String asset;

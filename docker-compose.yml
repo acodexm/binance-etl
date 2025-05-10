@@ -1,0 +1,156 @@
+---
+version: '3'
+services:
+  # Infrastructure services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  # Database services - separate for each application
+  binance_connector_db:
+    image: postgres:14-alpine
+    container_name: binance_connector_db
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: binance_connector
+    volumes:
+      - binance-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  data_transformer_db:
+    image: postgres:14-alpine
+    container_name: data_transformer_db
+    ports:
+      - "5441:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: data_transformer
+    volumes:
+      - transformer-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  data_loader_db:
+    image: timescale/timescaledb:latest-pg14
+    container_name: data_loader_db
+    ports:
+      - "5442:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: data_loader
+    volumes:
+      - data_loader_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application services
+  binance-connector:
+    build: ./binance-connector
+    container_name: binance-connector
+    depends_on:
+      - broker
+      - binance-db
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      SPRING_PROFILES_ACTIVE: 'docker'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://binance-db:5432/binance_db'
+      SPRING_DATASOURCE_USERNAME: 'postgres'
+      SPRING_DATASOURCE_PASSWORD: 'postgres'
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: 'broker:29092'
+      KAFKA_RAW_MARKET_DATA_TOPIC: 'raw_market_data'
+      BINANCE_WEBSOCKET_SYMBOLS: 'BTCUSDT,ETHUSDT'
+      BINANCE_WEBSOCKET_INTERVALS: '1m'
+      LOGGING_LEVEL_COM_ACODEXM: 'INFO'
+
+  data-transformer:
+    build: ./data-transformer
+    container_name: data-transformer
+    depends_on:
+      - broker
+      - data_transformer_db
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      SPRING_PROFILES_ACTIVE: 'docker'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://transformer-db:5432/transformer_db'
+      SPRING_DATASOURCE_USERNAME: 'postgres'
+      SPRING_DATASOURCE_PASSWORD: 'postgres'
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: 'broker:29092'
+      SPRING_KAFKA_CONSUMER_GROUP_ID: 'data-transformer-group'
+      KAFKA_RAW_MARKET_DATA_TOPIC: 'raw_market_data'
+      KAFKA_TRANSFORMED_MARKET_DATA_TOPIC: 'transformed_market_data'
+      INDICATOR_MA_PERIOD: '20'
+      INDICATOR_RSI_PERIOD: '14'
+      LOGGING_LEVEL_COM_ACODEXM: 'INFO'
+
+
+  data-loader:
+    build: ./data-loader
+    container_name: data-loader
+    depends_on:
+      - broker
+      - data_loader_db
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      SPRING_PROFILES_ACTIVE: 'docker'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://timescaledb:5432/market_data'
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: 'org.postgresql.Driver'
+      SPRING_DATASOURCE_USERNAME: 'postgres'
+      SPRING_DATASOURCE_PASSWORD: 'postgres'
+      SPRING_JPA_DATABASE_PLATFORM: 'org.hibernate.dialect.PostgreSQLDialect'
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'org.hibernate.dialect.PostgreSQLDialect'
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: 'broker:29092'
+      SPRING_KAFKA_CONSUMER_GROUP_ID: 'data-loader-group'
+      KAFKA_TRANSFORMED_MARKET_DATA_TOPIC: 'transformed_market_data'
+      WEBSOCKET_ALLOWED_ORIGINS: '*'
+      DATA_RETENTION_DAYS: '30'
+      LOGGING_LEVEL_COM_ACODEXM: 'INFO'
+      # Configure TimescaleDB specific settings
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: 'UTC'
+
+volumes:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
+  binance-db-data:
+  transformer-db-data:
+  data_loader_data:

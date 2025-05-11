@@ -3,7 +3,6 @@ package com.acodexm.dataloader.mappers;
 import com.acodexm.dataloader.entity.UserEntity;
 import com.acodexm.dataloader.model.UserData;
 import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

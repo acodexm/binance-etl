@@ -33,6 +33,9 @@ public class TimescaleDBConfig {
     Instant startTime = Instant.now();
 
     try {
+      // First ensure the extension is created
+      createTimescaleExtension();
+
       // Create hypertables
       createHypertable("user_balances_view", "record_timestamp");
       createHypertable("symbol_time_window_prices", "window_start_time");
@@ -49,6 +52,28 @@ public class TimescaleDBConfig {
             "TimescaleDB initialization timed out after {} ms",
             Duration.between(startTime, Instant.now()).toMillis());
       }
+    }
+  }
+
+  private void createTimescaleExtension() {
+    try {
+      // Check if the extension already exists
+      boolean extensionExists =
+          jdbcTemplate.queryForObject(
+              "SELECT EXISTS (SELECT FROM pg_extension WHERE extname = 'timescaledb')",
+              Boolean.class);
+
+      if (extensionExists) {
+        log.info("TimescaleDB extension already exists");
+        return;
+      }
+
+      // Create the extension
+      jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE");
+      log.info("Created TimescaleDB extension");
+    } catch (Exception e) {
+      log.error("Error creating TimescaleDB extension: {}", e.getMessage(), e);
+      throw e;
     }
   }
 

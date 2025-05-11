@@ -28,26 +28,26 @@ public class UserConsumerServiceImpl implements UserConsumerService {
   @Transactional
   @Override
   public void consumeUserData(String message) {
-      try {
-          UserData userData = objectMapper.readValue(message, UserData.class);
-          log.debug("Received user data: {}", userData);
+    try {
+      UserData userData = objectMapper.readValue(message, UserData.class);
+      log.debug("Received user data: {}", userData);
 
-          userRepository
-              .findByUserId(userData.getUserId())
-              .ifPresentOrElse(
-                  existingUser -> {
-                      existingUser.setActive(userData.isActive());
-                      existingUser.setLastUpdated(Instant.now());
-                      userRepository.save(existingUser);
-                      log.debug("Updated existing user: {}", existingUser.getUserId());
-                  },
-                  () -> {
-                      UserEntity userEntity = userMapper.toEntity(userData);
-                      userRepository.save(userEntity);
-                      log.debug("Created new user: {}", userEntity.getUserId());
-                  });
-      } catch (Exception e) {
-          log.error("Error processing user data: {}", e.getMessage(), e);
-      }
+      userRepository
+          .findByUserId(userData.getUserId())
+          .ifPresentOrElse(
+              existingUser -> {
+                existingUser.setActive(userData.isActive());
+                existingUser.setLastUpdated(Instant.now());
+                userRepository.save(existingUser);
+                log.debug("Updated existing user: {}", existingUser.getUserId());
+              },
+              () -> {
+                UserEntity userEntity = userMapper.toEntity(userData);
+                userRepository.save(userEntity);
+                log.debug("Created new user: {}", userEntity.getUserId());
+              });
+    } catch (Exception e) {
+      log.error("Error processing user data: {}", e.getMessage(), e);
+    }
   }
 }

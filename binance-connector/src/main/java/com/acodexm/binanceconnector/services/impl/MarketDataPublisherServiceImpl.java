@@ -25,7 +25,7 @@ public class MarketDataPublisherServiceImpl implements MarketDataPublisherServic
   public void publishKlineData(KlineData klineData) {
     try {
       String message = objectMapper.writeValueAsString(klineData);
-      kafkaTemplate.send(kafkaConfig.getKlineData(), klineData.getSymbol(), message);
+      kafkaTemplate.send(kafkaConfig.getKlineData(),  message);
       log.debug("Published kline data for symbol: {}", klineData.getSymbol());
     } catch (JsonProcessingException e) {
       log.error("Failed to publish kline data: {}", e.getMessage(), e);
@@ -36,7 +36,7 @@ public class MarketDataPublisherServiceImpl implements MarketDataPublisherServic
   public void publishUserBalance(UserBalance userBalance) {
     try {
       String message = objectMapper.writeValueAsString(userBalance);
-      kafkaTemplate.send(kafkaConfig.getUserBalance(), userBalance.getAsset(), message);
+      kafkaTemplate.send(kafkaConfig.getUserBalance(),  message);
       log.debug("Published user balance for asset: {}", userBalance.getAsset());
     } catch (JsonProcessingException e) {
       log.error("Failed to publish user balance: {}", e.getMessage(), e);
@@ -47,7 +47,7 @@ public class MarketDataPublisherServiceImpl implements MarketDataPublisherServic
   public void publishUserData(User user) {
     try {
       String message = objectMapper.writeValueAsString(user);
-      kafkaTemplate.send(kafkaConfig.getUserData(), user.getUserId(), message);
+      kafkaTemplate.send(kafkaConfig.getUserData(),  message);
       log.debug("Published user: {}", user);
     } catch (JsonProcessingException e) {
       log.error("Failed to publish user: {}", e.getMessage(), e);

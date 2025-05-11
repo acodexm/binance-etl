@@ -7,6 +7,7 @@ import com.acodexm.dataloader.repository.PortfolioValueViewRepository;
 import com.acodexm.dataloader.repository.SymbolTimeWindowPriceRepository;
 import com.acodexm.dataloader.repository.UserBalanceViewRepository;
 import com.acodexm.dataloader.repository.UserRepository;
+import com.acodexm.dataloader.service.PortfolioService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -14,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import com.acodexm.dataloader.service.PortfolioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

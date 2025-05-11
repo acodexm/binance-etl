@@ -11,20 +11,21 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
     show-sql: false
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: data-loader-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: com.acodexm.binanceconnector.domain,com.acodexm.datatransformer.model,com.acodexm.dataloader.model
+
+  flyway:
+    clean-disabled: false # Be careful! This allows flyway:clean which drops all objects
+    url: jdbc:postgresql://localhost:5442/data_loader
+    user: postgres
+    password: postgres
 
 kafka:
   topics:
